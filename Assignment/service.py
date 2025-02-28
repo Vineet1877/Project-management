@@ -68,6 +68,7 @@ class AssignmentService:
 
     @staticmethod
     def findBenchResource() -> list[dict]:
+        print("Hello")
         subquery = (
             db.query(models.ResourceAssignment.resourceId)
             .filter(models.ResourceAssignment.offBoard.is_(None))

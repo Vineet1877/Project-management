@@ -26,7 +26,7 @@ def getById(projectId: int):
 @router.get("/projects", response_model=Response)
 def getAll():
     projects = ProjectService.findAll()
-    return Response(status=status.HTTP_200_OK, message="Resources fetched successfully", data=projects)
+    return Response(status=status.HTTP_200_OK, message="Resources fetched successfully", data=projects, count=len(projects))
 
 @router.put("/project/{projectId}", response_model=Response)
 def updateProject(projectId: int, project: Project):
