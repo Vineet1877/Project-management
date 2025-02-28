@@ -1,3 +1,5 @@
+from sqlalchemy import func
+
 import models
 from database import Session
 from Project.project import Project
@@ -26,8 +28,6 @@ class ProjectService:
     @staticmethod
     def findById(projectId: int) -> dict | None:
         project: models.Project = db.query(models.Project).filter(models.Project.projectId == projectId).first()
-        print(project)
-        print("Flag")
         if project:
             return project.toDict()
         return None
@@ -56,3 +56,13 @@ class ProjectService:
             db.refresh(dbProject)
             return dbProject.toDict()
         return None
+
+    @staticmethod
+    def endProject(projectId: int):
+        project: models.Project = db.query(models.Project).filter(models.Project.projectId == projectId).first()
+        if project:
+            project.endDate = func.now()
+            db.commit()
+
+        db.query(models.ResourceAssignment).filter(models.ResourceAssignment.projectId == projectId, models.ResourceAssignment.offBoard.is_(None)).update({"offBoard": func.now()})
+        db.commit()

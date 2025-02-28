@@ -10,7 +10,7 @@ def createResource(resource: Resource):
     try:
         createdResource: dict = ResourceService.create(resource)
         createdResource.pop("isDeleted")
-        return Response(status=status.HTTP_201_CREATED, message="Resource created successfully", data=createdResource)
+        return Response(status=status.HTTP_201_CREATED, message="Resource created successfully", data=createdResource, count=1)
     except Exception as e:
         return Response(status=status.HTTP_400_BAD_REQUEST, message="Failed to create resource", error=str(e))
 
@@ -21,7 +21,7 @@ def getById(resourceId: int):
     if not resource:
         return Response(status=status.HTTP_404_NOT_FOUND, message="Resource not found", error="Invalid resourceId")
 
-    return Response(status=status.HTTP_200_OK, message="Resource fetched successfully", data=resource)
+    return Response(status=status.HTTP_200_OK, message="Resource fetched successfully", data=resource, count=1)
 
 @router.get("/resources", response_model=Response)
 def getAll():
@@ -30,7 +30,7 @@ def getAll():
     for resource in resources:
         resource.pop("isDeleted")
 
-    return Response(status=status.HTTP_200_OK, message="Resources fetched successfully", data=resources)
+    return Response(status=status.HTTP_200_OK, message="Resources fetched successfully", data=resources, count=len(resources))
 
 @router.put("/resource/{resourceId}", response_model=Response)
 def updateResource(resourceId: int, resource: Resource):
@@ -40,7 +40,7 @@ def updateResource(resourceId: int, resource: Resource):
             return Response(status=status.HTTP_404_NOT_FOUND, message="Resource not found for update", error="Invalid resourceId")
 
         updatedResource.pop("isDeleted")
-        return Response(status=status.HTTP_200_OK, message="Resource updated successfully", data=updatedResource)
+        return Response(status=status.HTTP_200_OK, message="Resource updated successfully", data=updatedResource, count=1)
     except Exception as e:
         return Response(status=status.HTTP_400_BAD_REQUEST, message="Failed to update resource", error=str(e), data=None)
 
@@ -52,6 +52,6 @@ def deleteResource(resourceId: int):
         if not deletedResource:
             return Response(status=status.HTTP_404_NOT_FOUND, message="Resource not found for deletion", error="Invalid resourceId")
 
-        return Response(status=status.HTTP_200_OK, message="Resource deleted successfully", data=deletedResource)
+        return Response(status=status.HTTP_200_OK, message="Resource deleted successfully", data=deletedResource, count=1)
     except Exception as e:
         return Response(status=400, message="Failed to delete resource", error=str(e)).model_dump()

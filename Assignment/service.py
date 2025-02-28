@@ -1,5 +1,4 @@
 import datetime
-
 import models
 from database import Session
 
@@ -30,14 +29,8 @@ class AssignmentService:
 
     @staticmethod
     def findByProjectId(projectId: int) -> list[dict]:
-        assignments: list[models.ResourceAssignment] = db.query(models.ResourceAssignment).filter(
-            models.ResourceAssignment.projectId == projectId).all()
+        dbResources: list[models.Resource] = db.query(models.Resource).join(models.ResourceAssignment, models.Resource.resourceId == models.ResourceAssignment.resourceId).filter(models.ResourceAssignment.projectId == projectId, models.ResourceAssignment.offBoard.is_(None)).all()
 
-        resourceIds: list[int] = []
-        for assignment in assignments:
-            resourceIds.append(assignment.resourceId)
-
-        dbResources: list[models.Project] = db.query(models.Resource).filter(models.Resource.resourceId.in_(resourceIds)).all()
         resources: list[dict] = []
         for resource in dbResources:
             resources.append(resource.toDict())
@@ -46,14 +39,8 @@ class AssignmentService:
 
     @staticmethod
     def findLiveProjects(resourceId: int) -> list[dict]:
-        assignments: list[models.ResourceAssignment] = db.query(models.ResourceAssignment).filter(
-            models.ResourceAssignment.resourceId == resourceId, models.ResourceAssignment.offBoard is None).all()
+        dbProjects: list[models.Project] = db.query(models.Project).join(models.ResourceAssignment, models.Project.projectId == models.ResourceAssignment.projectId).filter(models.ResourceAssignment.resourceId == resourceId, models.ResourceAssignment.offBoard.is_(None)).all()
 
-        projectIds: list[int] = []
-        for assignment in assignments:
-            projectIds.append(assignment.projectId)
-
-        dbProjects: list[models.Project] = db.query(models.Project).filter(models.Project.projectId.in_(projectIds)).all()
         projects: list[dict] = []
         for project in dbProjects:
             projects.append(project.toDict())
@@ -62,15 +49,8 @@ class AssignmentService:
 
     @staticmethod
     def findByResourceId(resourceId: int) -> list[dict]:
-        assignments: list[models.ResourceAssignment] = db.query(models.ResourceAssignment).filter(
-            models.ResourceAssignment.resourceId == resourceId).all()
+        dbProjects: list[models.Project] = db.query(models.Project).join(models.ResourceAssignment, models.Project.projectId == models.ResourceAssignment.projectId).filter(models.ResourceAssignment.resourceId == resourceId).all()
 
-        projectIds: list[int] = []
-        for assignment in assignments:
-            projectIds.append(assignment.projectId)
-
-        dbProjects: list[models.Project] = db.query(models.Project).filter(
-            models.Project.projectId.in_(projectIds)).all()
         projects: list[dict] = []
         for project in dbProjects:
             projects.append(project.toDict())
@@ -85,3 +65,23 @@ class AssignmentService:
             assignment.offBoard = datetime.datetime.now()
             db.commit()
             db.refresh(assignment)
+
+    @staticmethod
+    def findBenchResource() -> list[dict]:
+        subquery = (
+            db.query(models.ResourceAssignment.resourceId)
+            .filter(models.ResourceAssignment.offBoard.is_(None))
+            .subquery()
+        )
+
+        benchResources = (
+            db.query(models.Resource)
+            .filter(models.Resource.resourceId.notin_(subquery))
+            .all()
+        )
+
+        resources: list[dict] = []
+        for resource in benchResources:
+            resources.append(resource.toDict())
+
+        return resources
